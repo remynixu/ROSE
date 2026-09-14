@@ -3,7 +3,7 @@
         {
             "name": "windows",
             "includePath": [
-                "${workspaceFolder}/lib/*"
+                "${workspaceFolder}/include/*"
             ],
             "defines": [],
             "compilerPath": "C:\\Program Files\\LLVM\\bin\\clang.exe",
