@@ -2,19 +2,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "BUILD DIR",
-            "type": "shell",
-            "command": "powershell",
-            "args": [
-                "-Command",
-                "if (Test-Path 'build_debug') { Remove-Item -Recurse -Force 'build_debug'}"
-            ],
-            "presentation": {
-                "reveal": "silent",
-                "panel": "shared"
-            }
-        },
-        {
             "label": "CMAKE CONFIG",
             "type": "shell",
             "command": "cmake",
@@ -25,9 +12,6 @@
                 "-DCMAKE_MAKE_PROGRAM=C:\\raylib\\w64devkit\\bin\\make.exe",
                 "-DCMAKE_C_COMPILER=C:\\Program Files\\LLVM\\bin\\clang.exe",
                 "-DCMAKE_BUILD_TYPE=Debug"
-            ],
-            "dependsOn": [
-                "BUILD DIR"
             ]
         },
         {
@@ -35,7 +19,7 @@
             "type": "shell",
             "command": "cmake",
             "args": [
-                "--build", "build", "-j2"
+                "--build", "build", "-j2", "--target", "clean"
             ],
             "dependsOn": [
                 "CMAKE CONFIG"

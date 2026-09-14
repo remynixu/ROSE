@@ -14,7 +14,7 @@
 
 /*
  * To make sure the compiler doesn't do any unexpected magic... please add this
- * before the name of every function :<
+ * before the name of every EFI function :<
  */
 #define EFI_API                                 __attribute((ms_abi))
 
@@ -94,6 +94,7 @@ typedef EFI_STATUS (EFI_API *EFI_IMAGE_ENTRY_POINT)(
  */
 
 #define EFI_SYSTEM_TABLE_SIGNATURE              0x5453595320494249
+
 #define EFI_2_100_SYSTEM_TABLE_REVISION         ((2<<16) | (100))
 #define EFI_2_90_SYSTEM_TABLE_REVISION          ((2<<16) | (90))
 #define EFI_2_80_SYSTEM_TABLE_REVISION          ((2<<16) | (80))
@@ -108,8 +109,9 @@ typedef EFI_STATUS (EFI_API *EFI_IMAGE_ENTRY_POINT)(
 #define EFI_2_00_SYSTEM_TABLE_REVISION          ((2<<16) | (00))
 #define EFI_1_10_SYSTEM_TABLE_REVISION          ((1<<16) | (10))
 #define EFI_1_02_SYSTEM_TABLE_REVISION          ((1<<16) | (02))
-#define EFI_SPECIFICATION_VERSION               EFI_SYSTEM_TABLE_REVISION
+
 #define EFI_SYSTEM_TABLE_REVISION               EFI_2_100_SYSTEM_TABLE_REVISION
+#define EFI_SPECIFICATION_VERSION               EFI_SYSTEM_TABLE_REVISION
 
 typedef struct{
         EFI_TABLE_HEADER                        Hdr;
@@ -336,8 +338,8 @@ typedef struct{
  * EFI_BOOT_SERVICES contents:
  */
 
-#define EFI_BOOT_SERVICES_SIGNATURE 0x56524553544f4f42
-#define EFI_BOOT_SERVICES_REVISION EFI_SPECIFICATION_VERSION
+#define EFI_BOOT_SERVICES_SIGNATURE             0x56524553544f4f42
+#define EFI_BOOT_SERVICES_REVISION              EFI_SPECIFICATION_VERSION
 
 typedef struct{
         EFI_TABLE_HEADER                        Hdr;
