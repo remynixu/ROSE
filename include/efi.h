@@ -64,6 +64,8 @@ typedef rose_bit16_t                            uchar16_t;
 typedef rose_native_t                           EFI_STATUS;
 
 #define EFI_SUCCESS                             ((EFI_STATUS)0)
+#define EFI_ISERROR
+#define EFI_ISWARNING
 
 #define ERRORCODE_BITMASK__                     ((EFI_STATUS)1 << 63)
 #define ERRORCODE__(ec__)                                                     \
@@ -159,6 +161,13 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_RESET)(
      IN efi_bool                                ExtendedVerification
 );
 
+/*
+ * Returns:
+ * - EFI_SUCCESS
+ * - EFI_DEVICE_ERROR
+ * - EFI_UNSUPPORTED
+ * - EFI_WARN_UNKNOWN_GLYPH
+ */
 typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
      IN rose_bit16_t                           *String
@@ -351,8 +360,19 @@ typedef struct{
  * EFI_BOOT_SERVICES contents:
  */
 
+/* -------------------------------------------------------------------------- *
+ * MEMORY SERVICES:
+ */
+
 #define EFI_BOOT_SERVICES_SIGNATURE             0x56524553544f4f42
 #define EFI_BOOT_SERVICES_REVISION              EFI_SPECIFICATION_VERSION
+
+typedef enum{
+        AllocateAnyPages,
+        AllocateMaxAddress,
+        AllocateAddress,
+        MaxAllocateType
+}EFI_ALLOCATE_TYPE;
 
 typedef enum{
         EfiReservedMemoryType = 0, /* This drove me crazy lmao xD */
@@ -373,19 +393,79 @@ typedef enum{
         EfiMaxMemoryType
 }EFI_MEMORY_TYPE;
 
+typedef rose_bit64_t                            EFI_PHYSICAL_ADDRESS;
+
+typedef EFI_STATUS (EFI_API *EFI_ALLOCATE_PAGES)(
+     IN EFI_ALLOCATE_TYPE                       Type,
+     IN EFI_MEMORY_TYPE                         MemoryType,
+     IN rose_native_t                           Pages,
+ IN OUT EFI_PHYSICAL_ADDRESS                   *Memory
+);
+
+typedef EFI_STATUS (EFI_API *EFI_FREE_PAGES)(
+     IN EFI_PHYSICAL_ADDRESS                   *Memory,
+     IN rose_native_t                           Pages
+);
+
+#define EFI_MEMORY_UC                           0x0000000000000001
+#define EFI_MEMORY_WC                           0x0000000000000002
+#define EFI_MEMORY_WT                           0x0000000000000004
+#define EFI_MEMORY_WB                           0x0000000000000008
+#define EFI_MEMORY_UCE                          0x0000000000000010
+#define EFI_MEMORY_WP                           0x0000000000001000
+#define EFI_MEMORY_RP                           0x0000000000002000
+#define EFI_MEMORY_XP                           0x0000000000004000
+#define EFI_MEMORY_NV                           0x0000000000008000
+#define EFI_MEMORY_MORE_RELIABLE                0x0000000000010000
+#define EFI_MEMORY_RO                           0x0000000000020000
+#define EFI_MEMORY_SP                           0x0000000000040000
+#define EFI_MEMORY_CPU_CRYPTO                   0x0000000000080000
+#define EFI_MEMORY_HOT_PLUGGABLE                0x0000000000100000
+#define EFI_MEMORY_RUNTIME                      0x8000000000000000
+#define EFI_MEMORY_ISA_VALID                    0x4000000000000000
+#define EFI_MEMORY_ISA_MASK                     0x0FFFF00000000000
+
+typedef rose_bit64_t                            EFI_VIRTUAL_ADDRESS;
+
+#define EFI_MEMORY_DESCRIPTOR_VERSION           1
+
+typedef struct{
+        rose_bit32_t                            Type;
+        EFI_PHYSICAL_ADDRESS                    PhysicalStart;
+        EFI_VIRTUAL_ADDRESS                     VirtualStart;
+        rose_bit64_t                            NumberOfPages;
+        rose_bit64_t                            Attribute;
+}EFI_MEMORY_DESCRIPTOR;
+
+typedef EFI_STATUS (EFI_API *EFI_GET_MEMORY_MAP)(
+ IN OUT rose_native_t                          *MemoryMapSize,
+    OUT EFI_MEMORY_DESCRIPTOR                  *MemoryMap,
+    OUT rose_native_t                          *MapKey,
+    OUT rose_native_t                          *DescriptorSize,
+    OUT rose_bit32_t                           *DescriptorVersion
+);
+
 typedef EFI_STATUS (EFI_API *EFI_ALLOCATE_POOL)(
      IN EFI_MEMORY_TYPE                         PoolType,
      IN rose_native_t                           Size,
     OUT void                                  **Buffer
 );
 
+typedef EFI_STATUS (EFI_API *EFI_FREE_POOL)(
+     IN void                                   *Buffer
+);
+
 typedef struct{
         EFI_TABLE_HEADER                        Hdr;
 
         /* Omitted functions */
-        void                                   *padding__1[5];
+        void                                   *padding__1[2];
 
+        EFI_ALLOCATE_PAGES                      AllocatePages;
+        EFI_FREE_PAGES                          FreePages;
+        EFI_GET_MEMORY_MAP                      GetMemoryMap;
         EFI_ALLOCATE_POOL                       AllocatePool;
+        EFI_FREE_POOL                           FreePool;
 
         /* Omitted functions */
         void                                   *padding__2[38];
