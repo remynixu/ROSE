@@ -9,8 +9,10 @@
  */
 #define ROSE_EFI_H
 
-/* A little help from the standard library won't hurt right? :> */
-#include <stdint.h>
+/*
+ * Since stdint.h doesn't exist in C89, we use our own data types :<
+ */
+#include <rose_types.h>
 
 /*
  * To make sure the compiler doesn't do any unexpected magic... please add this
@@ -38,10 +40,10 @@ typedef void*                                   EFI_HANDLE;
 typedef void*                                   EFI_EVENT;
 
 /* A boolean for UEFI :> */
-typedef uint8_t                                 efi_bool;
+typedef rose_bit8_t                             efi_bool;
 
 /* UEFI uses 16-bit characters... */
-typedef uint16_t                                uchar16_t;
+typedef rose_bit16_t                            uchar16_t;
 
 /* -------------------------------------------------------------------------- *
  * UEFI Error codes:
@@ -59,7 +61,7 @@ typedef uint16_t                                uchar16_t;
  */
 
 /* UEFI has... quite the error code system ._. */
-typedef uintptr_t                               EFI_STATUS;
+typedef rose_native_t                           EFI_STATUS;
 
 #define EFI_SUCCESS                             ((EFI_STATUS)0)
 
@@ -77,17 +79,6 @@ typedef uintptr_t                               EFI_STATUS;
  * Since these data are already defined by UEFI, it's all just mostly just
  * copy-pasted code below...
  */
-
-/*
- * The entry point of an EFI binary.
- *
- * EFI_HANDLE is an opaque pointer we're not supposd to tamper with.
- * EFI_SYSTEM_TABLE is where the useful functions and data are!
- */
-typedef EFI_STATUS (EFI_API *EFI_IMAGE_ENTRY_POINT)(
-     IN EFI_HANDLE                              ImageHandle,
-     IN EFI_SYSTEM_TABLE                       *SystemTable
-);
 
 /* -------------------------------------------------------------------------- *
  * EFI_SYSTEM_TABLE contents:
@@ -114,27 +105,11 @@ typedef EFI_STATUS (EFI_API *EFI_IMAGE_ENTRY_POINT)(
 #define EFI_SPECIFICATION_VERSION               EFI_SYSTEM_TABLE_REVISION
 
 typedef struct{
-        EFI_TABLE_HEADER                        Hdr;
-        uint16_t                               *FirmwareVendor;
-        uint32_t                                FirmwareRevision;
-        EFI_HANDLE                              ConsoleInHandle;
-        EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *ConIn;
-        EFI_HANDLE                              ConsoleOutHandle;
-        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *ConOut;
-        EFI_HANDLE                              StandardErrorHandle;
-        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *StdErr;
-        EFI_RUNTIME_SERVICES                   *RuntimeServices;
-        EFI_BOOT_SERVICES                      *BootServices;
-        uintptr_t                               NumberOfTableEntries;
-        EFI_CONFIGURATION_TABLE                *ConfigurationTable;
-}EFI_SYSTEM_TABLE;
-
-typedef struct{
-        uint64_t                                Signature;
-        uint32_t                                Revision;
-        uint32_t                                HeaderSize;
-        uint32_t                                CRC32;
-        uint32_t                                Reserved;
+        rose_bit64_t                            Signature;
+        rose_bit32_t                            Revision;
+        rose_bit32_t                            HeaderSize;
+        rose_bit32_t                            CRC32;
+        rose_bit32_t                            Reserved;
 }EFI_TABLE_HEADER;
 
 /* -------------------------------------------------------------------------- *
@@ -145,26 +120,28 @@ typedef struct{
         {0x387477c1,0x69c7,0x11d2,                                            \
         {0x8e,0x39,0x00,0xa0,0xc9,0x69,0x72,0x3b}}
 
-typedef struct{
-        EFI_INPUT_RESET                         Reset;
-        EFI_INPUT_READ_KEY                      ReadKeyStroke;
-        EFI_EVENT                               WaitForKey;
-}EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
+typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL  EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
 
 typedef EFI_STATUS (EFI_API *EFI_INPUT_RESET)(
      IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *This,
      IN efi_bool                                ExtendedVerification
 );
 
+typedef struct{
+        rose_bit16_t                            ScanCode;
+        uchar16_t                               UnicodeChar;
+}EFI_INPUT_KEY;
+
 typedef EFI_STATUS (EFI_API *EFI_INPUT_READ_KEY)(
      IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *This,
     OUT EFI_INPUT_KEY                          *Key
 );
 
-typedef struct{
-        uint16_t                                ScanCode;
-        uchar16_t                               UnicodeChar;
-}EFI_INPUT_KEY;
+typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL{
+        EFI_INPUT_RESET                         Reset;
+        EFI_INPUT_READ_KEY                      ReadKeyStroke;
+        EFI_EVENT                               WaitForKey;
+}EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
 
 /* -------------------------------------------------------------------------- *
  * EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL contents:
@@ -174,18 +151,8 @@ typedef struct{
         {0x387477c2,0x69c7,0x11d2,                                            \
         {0x8e,0x39,0x00,0xa0,0xc9,0x69,0x72,0x3b}}
 
-typedef struct{
-        EFI_TEXT_RESET                          Reset;
-        EFI_TEXT_STRING                         OutputString;
-        EFI_TEXT_TEST_STRING                    TestString;
-        EFI_TEXT_QUERY_MODE                     QueryMode;
-        EFI_TEXT_SET_MODE                       SetMode;
-        EFI_TEXT_SET_ATTRIBUTE                  SetAttribute;
-        EFI_TEXT_CLEAR_SCREEN                   ClearScreen;
-        EFI_TEXT_SET_CURSOR_POSITION            SetCursorPosition;
-        EFI_TEXT_ENABLE_CURSOR                  EnableCursor;
-        SIMPLE_TEXT_OUTPUT_MODE                 *Mode;
-}EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
+typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL                               \
+        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_RESET)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
@@ -194,10 +161,10 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_RESET)(
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN uint16_t                               *String
+     IN rose_bit16_t                           *String
 );
 
-/* -------------------------------------------------------------------------- *
+/*
  * UNICODE DRAWING CHARACTERS
  */
 
@@ -249,14 +216,14 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
 #define BOXDRAW_VERTICAL_DOUBLE_HORIZONTAL      0x256b
 #define BOXDRAW_DOUBLE_VERTICAL_HORIZONTAL      0x256c
 
-/* -------------------------------------------------------------------------- *
+/*
  * EFI Required Block Elements Code Chart
  */
 
 #define BLOCKELEMENT_FULL_BLOCK                 0x2588
 #define BLOCKELEMENT_LIGHT_SHADE                0x2591
 
-/* -------------------------------------------------------------------------- *
+/*
  * EFI Required Geometric Shapes Code Chart
  */
 
@@ -265,7 +232,7 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
 #define GEOMETRICSHAPE_DOWN_TRIANGLE            0x25bc
 #define GEOMETRICSHAPE_LEFT_TRIANGLE            0x25c4
 
-/* -------------------------------------------------------------------------- *
+/*
  * EFI Required Arrow shapes
  */
 
@@ -279,19 +246,19 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_TEST_STRING)(
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_QUERY_MODE)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN uintptr_t                               ModeNumber,
-    OUT uintptr_t                              *Columns,
-    OUT uintptr_t                              *Rows
+     IN rose_native_t                           ModeNumber,
+    OUT rose_native_t                          *Columns,
+    OUT rose_native_t                          *Rows
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_SET_MODE)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN uintptr_t                               ModeNumber
+     IN rose_native_t                           ModeNumber
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_SET_ATTRIBUTE)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN uintptr_t                               Attribute
+     IN rose_native_t                           Attribute
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_CLEAR_SCREEN)(
@@ -300,8 +267,8 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_CLEAR_SCREEN)(
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_SET_CURSOR_POSITION)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN uintptr_t                               Column,
-     IN uintptr_t                               Row
+     IN rose_native_t                           Column,
+     IN rose_native_t                           Row
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_ENABLE_CURSOR)(
@@ -310,28 +277,74 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_ENABLE_CURSOR)(
 );
 
 typedef struct {
-        int32_t                                 MaxMode;
+        rose_sbit32_t                           MaxMode;
 
         /* current settings (UEFI said this, not me xD) */
-        int32_t                                 Mode;
-        int32_t                                 Attribute;
-        int32_t                                 CursorColumn;
-        int32_t                                 CursorRow;
+        rose_sbit32_t                           Mode;
+        rose_sbit32_t                           Attribute;
+        rose_sbit32_t                           CursorColumn;
+        rose_sbit32_t                           CursorRow;
         efi_bool                                CursorVisible;
 }SIMPLE_TEXT_OUTPUT_MODE;
+
+typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL{
+        EFI_TEXT_RESET                          Reset;
+        EFI_TEXT_STRING                         OutputString;
+        EFI_TEXT_TEST_STRING                    TestString;
+        EFI_TEXT_QUERY_MODE                     QueryMode;
+        EFI_TEXT_SET_MODE                       SetMode;
+        EFI_TEXT_SET_ATTRIBUTE                  SetAttribute;
+        EFI_TEXT_CLEAR_SCREEN                   ClearScreen;
+        EFI_TEXT_SET_CURSOR_POSITION            SetCursorPosition;
+        EFI_TEXT_ENABLE_CURSOR                  EnableCursor;
+        SIMPLE_TEXT_OUTPUT_MODE                 *Mode;
+}EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
 /* -------------------------------------------------------------------------- *
  * EFI_RUNTIME_SERVICES contents:
  */
+
+typedef struct{
+        rose_bit16_t                            Year;
+        rose_bit8_t                             Month;
+        rose_bit8_t                             Day;
+        rose_bit8_t                             Hour;
+        rose_bit8_t                             Minute;
+        rose_bit8_t                             Second;
+        rose_bit8_t                             padding__1;
+        rose_bit32_t                            Nanosecond;
+        rose_sbit16_t                           TimeZone;
+        rose_bit8_t                             Daylight;
+        rose_bit8_t                             padding__2;
+}EFI_TIME;
+
+typedef struct{
+        rose_bit32_t                            Resolution;
+        rose_bit32_t                            Accuracy;
+        efi_bool                                SetsToZero;
+}EFI_TIME_CAPABILITIES;
+
+/*
+ * Returns;
+ * - EFI_SUCCESS
+ * - EFI_INVALID_PARAMETER
+ * - EFI_DEVICE_ERROR
+ */
+typedef EFI_STATUS (EFI_API *EFI_GET_TIME)(
+    OUT EFI_TIME                               *Time,
+    OUT EFI_TIME_CAPABILITIES                  *Capabilities OPTIONAL
+);
 
 #define EFI_RUNTIME_SERVICES_SIGNATURE          0x56524553544e5552
 #define EFI_RUNTIME_SERVICES_REVISION           EFI_SPECIFICATION_VERSION
 
 typedef struct{
         EFI_TABLE_HEADER                        Hdr;
+
+        EFI_GET_TIME                            GetTime;
         
         /* Omitted functions */
-        void                                   *padding__[14];
+        void                                   *padding__1[13];
 }EFI_RUNTIME_SERVICES;
 
 /* -------------------------------------------------------------------------- *
@@ -341,11 +354,41 @@ typedef struct{
 #define EFI_BOOT_SERVICES_SIGNATURE             0x56524553544f4f42
 #define EFI_BOOT_SERVICES_REVISION              EFI_SPECIFICATION_VERSION
 
+typedef enum{
+        EfiReservedMemoryType = 0, /* This drove me crazy lmao xD */
+        EfiLoaderCode,
+        EfiLoaderData,
+        EfiBootServicesCode,
+        EfiBootServicesData,
+        EfiRuntimeServicesCode,
+        EfiRuntimeServicesData,
+        EfiConventionalMemory,
+        EfiUnusableMemory,
+        EfiACPIReclaimMemory,
+        EfiACPIMemoryNVS,
+        EfiMemoryMappedIOPortSpace,
+        EfiPalCode,
+        EfiPersistentMemory,
+        EfiUnacceptedMemoryType,
+        EfiMaxMemoryType
+}EFI_MEMORY_TYPE;
+
+typedef EFI_STATUS (EFI_API *EFI_ALLOCATE_POOL)(
+     IN EFI_MEMORY_TYPE                         PoolType,
+     IN rose_native_t                           Size,
+    OUT void                                  **Buffer
+);
+
 typedef struct{
         EFI_TABLE_HEADER                        Hdr;
 
         /* Omitted functions */
-        void                                   *padding__[44];
+        void                                   *padding__1[5];
+
+        EFI_ALLOCATE_POOL                       AllocatePool;
+
+        /* Omitted functions */
+        void                                   *padding__2[38];
 }EFI_BOOT_SERVICES;
 
 /* -------------------------------------------------------------------------- *
@@ -353,15 +396,42 @@ typedef struct{
  */
 
 typedef struct{
+        rose_bit32_t                            d1;
+        rose_bit16_t                            d2;
+        rose_bit16_t                            d3;
+        rose_bit8_t                             d4[8];
+}EFI_GUID;
+
+typedef struct{
         EFI_GUID                                VendorGuid;
         void                                   *VendorTable;
 }EFI_CONFIGURATION_TABLE;
 
 typedef struct{
-        uint32_t                                d1;
-        uint16_t                                d2;
-        uint16_t                                d3;
-        uint8_t                                 d4[8];
-}EFI_GUID;
+        EFI_TABLE_HEADER                        Hdr;
+        rose_bit16_t                           *FirmwareVendor;
+        rose_bit32_t                            FirmwareRevision;
+        EFI_HANDLE                              ConsoleInHandle;
+        EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *ConIn;
+        EFI_HANDLE                              ConsoleOutHandle;
+        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *ConOut;
+        EFI_HANDLE                              StandardErrorHandle;
+        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *StdErr;
+        EFI_RUNTIME_SERVICES                   *RuntimeServices;
+        EFI_BOOT_SERVICES                      *BootServices;
+        rose_native_t                           NumberOfTableEntries;
+        EFI_CONFIGURATION_TABLE                *ConfigurationTable;
+}EFI_SYSTEM_TABLE;
+
+/*
+ * The entry porose_sbit of an EFI binary.
+ *
+ * EFI_HANDLE is an opaque porose_sbiter we're not supposd to tamper with.
+ * EFI_SYSTEM_TABLE is where the useful functions and data are!
+ */
+typedef EFI_STATUS (EFI_API *EFI_IMAGE_ENTRY_POINT)(
+     IN EFI_HANDLE                              ImageHandle,
+     IN EFI_SYSTEM_TABLE                       *SystemTable
+);
 
 #endif /* ROSE_EFI_H */

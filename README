@@ -14,4 +14,4 @@ This 64-bit OS is coded in C89 and is made to, as of now, only run in Class 3
 machines—machines that can only boot in UEFI, not BIOS unlike Class 2 or
 Class 1 machines.
 
-It is currently made to boot from a properly formatted USB device.
+It is currently made to boot from a (properly formatted) USB device.

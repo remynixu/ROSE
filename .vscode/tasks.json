@@ -2,28 +2,16 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "CMAKE CONFIG",
+            "label": "BUILD",
             "type": "shell",
-            "command": "cmake",
+            "command": "make",
             "args": [
-                "-S", "${workspaceFolder}\\.",
-                "-B", "${workspaceFolder}\\build_debug",
-                "-G", "MinGW Makefiles",
-                "-DCMAKE_MAKE_PROGRAM=C:\\raylib\\w64devkit\\bin\\make.exe",
-                "-DCMAKE_C_COMPILER=C:\\Program Files\\LLVM\\bin\\clang.exe",
-                "-DCMAKE_BUILD_TYPE=Debug"
-            ]
-        },
-        {
-            "label": "CMAKE BUILD",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build", "build", "-j2", "--target", "clean"
+                "all"
             ],
-            "dependsOn": [
-                "CMAKE CONFIG"
-            ]
+            "group": {
+                "kind": "build",
+                "isDefault": true // Ctrl+Shift+B
+            }
         }
     ]
 }
