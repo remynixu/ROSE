@@ -64,13 +64,37 @@ typedef rose_bit16_t                            uchar16_t;
 typedef rose_native_t                           EFI_STATUS;
 
 #define EFI_SUCCESS                             ((EFI_STATUS)0)
-#define EFI_ISERROR
-#define EFI_ISWARNING
 
 #define ERRORCODE_BITMASK__                     ((EFI_STATUS)1 << 63)
 #define ERRORCODE__(ec__)                                                     \
         ((EFI_STATUS)(ec__) | ERRORCODE_BITMASK__)
 
+/*
+ * ERROR/WARNING HELPERS:
+ */
+
+#define EFI_ISERROR(ec__)                                                     \
+        ((EFI_STATUS)(ec__) & ERRORCODE_BITMASK__)
+#define EFI_ISWARNING(ec__)                                                   \
+        ((EFI_STATUS)(ec__) != EFI_SUCCESS) && !EFI_ISERROR((EFI_STATUS)(ec__))
+
+/*
+ * ERRORS:
+ */
+
+#define EFI_LOAD_ERROR                          ERRORCODE__(1)
+#define EFI_INVALID_PARAMETER                   ERRORCODE__(2)
+#define EFI_UNSUPPORTED                         ERRORCODE__(3)
+#define EFI_BAD_BUFFER_SIZE                     ERRORCODE__(4)
+#define EFI_BUFFER_TOO_SMALL                    ERRORCODE__(5)
+#define EFI_NOT_READY                           ERRORCODE__(6)
+#define EFI_DEVICE_ERROR                        ERRORCODE__(7)
+#define EFI_WRITE_PROTECTED                     ERRORCODE__(8)
+#define EFI_OUT_OF_RESOURCES                    ERRORCODE__(9)
+#define EFI_VOLUME_CORRUPTED                    ERRORCODE__(10)
+#define EFI_VOLUME_FULL                         ERRORCODE__(11)
+#define EFI_NO_MEDIA                            ERRORCODE__(12)
+#define EFI_MEDIA_CHANGED                       ERRORCODE__(13)
 #define EFI_NOT_FOUND                           ERRORCODE__(14)
 
 /* ========================================================================== *
