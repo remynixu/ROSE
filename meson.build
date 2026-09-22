@@ -3,10 +3,12 @@ project('ROSE', 'c',
         default_options: ['c_std=c89', 'b_vscrt=none']
 )
 
-inc_dir = include_directories('include')
+inc_dir = include_directories('src')
 
 sources = [
-        'src/boot.c'
+        'src/boot.c',
+        'src/boot_utils.c',
+        'src/rose_utils.c'
 ]
 
 executable('BOOTX64', sources,

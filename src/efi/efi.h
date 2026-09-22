@@ -1,4 +1,9 @@
-#ifndef ROSE_EFI_H
+#ifndef EFI_H
+
+/* 
+ * From this 9/21/2026 onwards, this header will be largely undocumented. All
+ * the documents will now be found in efi_utils.h, a wrapper for efi.h's stuff.
+ */
 
 /*
  * This header is primarily for loading the rOSe kernel using the UEFI
@@ -7,12 +12,12 @@
  * All of the header's code is derived from this link:
  * - https://uefi.org/specs/UEFI/2.10
  */
-#define ROSE_EFI_H
+#define EFI_H
 
 /*
- * Since stdint.h doesn't exist in C89, we use our own data types :<
+ * You know what? Let's take Clang's generous offer because it's just better :>
  */
-#include <rose_types.h>
+#include <stdint.h>
 
 /*
  * To make sure the compiler doesn't do any unexpected magic... please add this
@@ -39,12 +44,6 @@ typedef void*                                   EFI_HANDLE;
 /* UEFI also made events a black box :< */
 typedef void*                                   EFI_EVENT;
 
-/* A boolean for UEFI :> */
-typedef rose_bit8_t                             efi_bool;
-
-/* UEFI uses 16-bit characters... */
-typedef rose_bit16_t                            uchar16_t;
-
 /* -------------------------------------------------------------------------- *
  * UEFI Error codes:
  */
@@ -61,7 +60,7 @@ typedef rose_bit16_t                            uchar16_t;
  */
 
 /* UEFI has... quite the error code system ._. */
-typedef rose_native_t                           EFI_STATUS;
+typedef uintptr_t                               EFI_STATUS;
 
 #define EFI_SUCCESS                             ((EFI_STATUS)0)
 
@@ -97,6 +96,18 @@ typedef rose_native_t                           EFI_STATUS;
 #define EFI_MEDIA_CHANGED                       ERRORCODE__(13)
 #define EFI_NOT_FOUND                           ERRORCODE__(14)
 
+/*
+ * WARNINGS:
+ */
+
+#define EFI_WARN_UNKNOWN_GLYPH                  (1)
+#define EFI_WARN_DELETE_FAILURE                 (2)
+#define EFI_WARN_WRITE_FAILURE                  (3)
+#define EFI_WARN_BUFFER_TOO_SMALL               (4)
+#define EFI_WARN_STALE_DATA                     (5)
+#define EFI_WARN_FILE_SYSTEM                    (6)
+#define EFI_WARN_RESET_REQUIRED                 (7)
+
 /* ========================================================================== *
  * UEFI Functions:
  */
@@ -131,11 +142,11 @@ typedef rose_native_t                           EFI_STATUS;
 #define EFI_SPECIFICATION_VERSION               EFI_SYSTEM_TABLE_REVISION
 
 typedef struct{
-        rose_bit64_t                            Signature;
-        rose_bit32_t                            Revision;
-        rose_bit32_t                            HeaderSize;
-        rose_bit32_t                            CRC32;
-        rose_bit32_t                            Reserved;
+        uint64_t                                Signature;
+        uint32_t                                Revision;
+        uint32_t                                HeaderSize;
+        uint32_t                                CRC32;
+        uint32_t                                Reserved;
 }EFI_TABLE_HEADER;
 
 /* -------------------------------------------------------------------------- *
@@ -150,12 +161,12 @@ typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL  EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
 
 typedef EFI_STATUS (EFI_API *EFI_INPUT_RESET)(
      IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *This,
-     IN efi_bool                                ExtendedVerification
+     IN uint8_t                                ExtendedVerification
 );
 
 typedef struct{
-        rose_bit16_t                            ScanCode;
-        uchar16_t                               UnicodeChar;
+        uint16_t                            ScanCode;
+        uint16_t                               UnicodeChar;
 }EFI_INPUT_KEY;
 
 typedef EFI_STATUS (EFI_API *EFI_INPUT_READ_KEY)(
@@ -182,7 +193,7 @@ typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL                               \
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_RESET)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN efi_bool                                ExtendedVerification
+     IN uint8_t                                ExtendedVerification
 );
 
 /*
@@ -194,7 +205,7 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_RESET)(
  */
 typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN rose_bit16_t                           *String
+     IN uint16_t                               *String
 );
 
 /*
@@ -274,24 +285,24 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_TEST_STRING)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN uchar16_t                              *String
+     IN uint16_t                               *String
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_QUERY_MODE)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN rose_native_t                           ModeNumber,
-    OUT rose_native_t                          *Columns,
-    OUT rose_native_t                          *Rows
+     IN uintptr_t                               ModeNumber,
+    OUT uintptr_t                              *Columns,
+    OUT uintptr_t                              *Rows
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_SET_MODE)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN rose_native_t                           ModeNumber
+     IN uintptr_t                               ModeNumber
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_SET_ATTRIBUTE)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN rose_native_t                           Attribute
+     IN uintptr_t                               Attribute
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_CLEAR_SCREEN)(
@@ -300,24 +311,24 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_CLEAR_SCREEN)(
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_SET_CURSOR_POSITION)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN rose_native_t                           Column,
-     IN rose_native_t                           Row
+     IN uintptr_t                               Column,
+     IN uintptr_t                               Row
 );
 
 typedef EFI_STATUS (EFI_API *EFI_TEXT_ENABLE_CURSOR)(
      IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-     IN efi_bool                                Visible
+     IN uint8_t                                 Visible
 );
 
 typedef struct {
-        rose_sbit32_t                           MaxMode;
+        int32_t                                 MaxMode;
 
         /* current settings (UEFI said this, not me xD) */
-        rose_sbit32_t                           Mode;
-        rose_sbit32_t                           Attribute;
-        rose_sbit32_t                           CursorColumn;
-        rose_sbit32_t                           CursorRow;
-        efi_bool                                CursorVisible;
+        int32_t                                 Mode;
+        int32_t                                 Attribute;
+        int32_t                                 CursorColumn;
+        int32_t                                 CursorRow;
+        uint8_t                                 CursorVisible;
 }SIMPLE_TEXT_OUTPUT_MODE;
 
 typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL{
@@ -330,7 +341,7 @@ typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL{
         EFI_TEXT_CLEAR_SCREEN                   ClearScreen;
         EFI_TEXT_SET_CURSOR_POSITION            SetCursorPosition;
         EFI_TEXT_ENABLE_CURSOR                  EnableCursor;
-        SIMPLE_TEXT_OUTPUT_MODE                 *Mode;
+        SIMPLE_TEXT_OUTPUT_MODE                *Mode;
 }EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
 /* -------------------------------------------------------------------------- *
@@ -338,23 +349,23 @@ typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL{
  */
 
 typedef struct{
-        rose_bit16_t                            Year;
-        rose_bit8_t                             Month;
-        rose_bit8_t                             Day;
-        rose_bit8_t                             Hour;
-        rose_bit8_t                             Minute;
-        rose_bit8_t                             Second;
-        rose_bit8_t                             padding__1;
-        rose_bit32_t                            Nanosecond;
-        rose_sbit16_t                           TimeZone;
-        rose_bit8_t                             Daylight;
-        rose_bit8_t                             padding__2;
+        uint16_t                                Year;
+        uint8_t                                 Month;
+        uint8_t                                 Day;
+        uint8_t                                 Hour;
+        uint8_t                                 Minute;
+        uint8_t                                 Second;
+        uint8_t                                 padding__1;
+        uint32_t                                Nanosecond;
+        int16_t                                 TimeZone;
+        uint8_t                                 Daylight;
+        uint8_t                                 padding__2;
 }EFI_TIME;
 
 typedef struct{
-        rose_bit32_t                            Resolution;
-        rose_bit32_t                            Accuracy;
-        efi_bool                                SetsToZero;
+        uint32_t                                Resolution;
+        uint32_t                                Accuracy;
+        uint8_t                                 SetsToZero;
 }EFI_TIME_CAPABILITIES;
 
 /*
@@ -417,18 +428,18 @@ typedef enum{
         EfiMaxMemoryType
 }EFI_MEMORY_TYPE;
 
-typedef rose_bit64_t                            EFI_PHYSICAL_ADDRESS;
+typedef uint64_t                                EFI_PHYSICAL_ADDRESS;
 
 typedef EFI_STATUS (EFI_API *EFI_ALLOCATE_PAGES)(
      IN EFI_ALLOCATE_TYPE                       Type,
      IN EFI_MEMORY_TYPE                         MemoryType,
-     IN rose_native_t                           Pages,
+     IN uintptr_t                               Pages,
  IN OUT EFI_PHYSICAL_ADDRESS                   *Memory
 );
 
 typedef EFI_STATUS (EFI_API *EFI_FREE_PAGES)(
      IN EFI_PHYSICAL_ADDRESS                   *Memory,
-     IN rose_native_t                           Pages
+     IN uintptr_t                               Pages
 );
 
 #define EFI_MEMORY_UC                           0x0000000000000001
@@ -449,29 +460,29 @@ typedef EFI_STATUS (EFI_API *EFI_FREE_PAGES)(
 #define EFI_MEMORY_ISA_VALID                    0x4000000000000000
 #define EFI_MEMORY_ISA_MASK                     0x0FFFF00000000000
 
-typedef rose_bit64_t                            EFI_VIRTUAL_ADDRESS;
+typedef uint64_t                                EFI_VIRTUAL_ADDRESS;
 
 #define EFI_MEMORY_DESCRIPTOR_VERSION           1
 
 typedef struct{
-        rose_bit32_t                            Type;
+        uint32_t                                Type;
         EFI_PHYSICAL_ADDRESS                    PhysicalStart;
         EFI_VIRTUAL_ADDRESS                     VirtualStart;
-        rose_bit64_t                            NumberOfPages;
-        rose_bit64_t                            Attribute;
+        uint64_t                                NumberOfPages;
+        uint64_t                                Attribute;
 }EFI_MEMORY_DESCRIPTOR;
 
 typedef EFI_STATUS (EFI_API *EFI_GET_MEMORY_MAP)(
- IN OUT rose_native_t                          *MemoryMapSize,
+ IN OUT uintptr_t                              *MemoryMapSize,
     OUT EFI_MEMORY_DESCRIPTOR                  *MemoryMap,
-    OUT rose_native_t                          *MapKey,
-    OUT rose_native_t                          *DescriptorSize,
-    OUT rose_bit32_t                           *DescriptorVersion
+    OUT uintptr_t                              *MapKey,
+    OUT uintptr_t                              *DescriptorSize,
+    OUT uint32_t                               *DescriptorVersion
 );
 
 typedef EFI_STATUS (EFI_API *EFI_ALLOCATE_POOL)(
      IN EFI_MEMORY_TYPE                         PoolType,
-     IN rose_native_t                           Size,
+     IN uintptr_t                               Size,
     OUT void                                  **Buffer
 );
 
@@ -500,10 +511,10 @@ typedef struct{
  */
 
 typedef struct{
-        rose_bit32_t                            d1;
-        rose_bit16_t                            d2;
-        rose_bit16_t                            d3;
-        rose_bit8_t                             d4[8];
+        uint32_t                                d1;
+        uint16_t                                d2;
+        uint16_t                                d3;
+        uint8_t                                 d4[8];
 }EFI_GUID;
 
 typedef struct{
@@ -513,8 +524,8 @@ typedef struct{
 
 typedef struct{
         EFI_TABLE_HEADER                        Hdr;
-        rose_bit16_t                           *FirmwareVendor;
-        rose_bit32_t                            FirmwareRevision;
+        uint16_t                               *FirmwareVendor;
+        uint32_t                                FirmwareRevision;
         EFI_HANDLE                              ConsoleInHandle;
         EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *ConIn;
         EFI_HANDLE                              ConsoleOutHandle;
@@ -523,7 +534,7 @@ typedef struct{
         EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *StdErr;
         EFI_RUNTIME_SERVICES                   *RuntimeServices;
         EFI_BOOT_SERVICES                      *BootServices;
-        rose_native_t                           NumberOfTableEntries;
+        uintptr_t                               NumberOfTableEntries;
         EFI_CONFIGURATION_TABLE                *ConfigurationTable;
 }EFI_SYSTEM_TABLE;
 
@@ -538,4 +549,4 @@ typedef EFI_STATUS (EFI_API *EFI_IMAGE_ENTRY_POINT)(
      IN EFI_SYSTEM_TABLE                       *SystemTable
 );
 
-#endif /* ROSE_EFI_H */
+#endif /* EFI_H */
