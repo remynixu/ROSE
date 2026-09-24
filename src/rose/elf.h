@@ -87,15 +87,10 @@ struct __attribute((packed)) elf64_header{
         uint16_t                                sct_str_index;
 };
 
-struct __attribute((packed)) elf64_program_header{
-        uint32_t                                seg_type;
-        uint32_t                                flags;
-        uint64_t                                data_offset;
-        uint64_t                                vaddr;
-        uint64_t                                paddr;
-        uint64_t                                seg_filesize;
-        uint64_t                                seg_memsize;
-        uint64_t                                alignment;
+enum elf_section_indices{
+        ELF_SECTION_UNDEFINED =                 0,
+        ELF_SECTION_ABSOLUTE =                  0xfff1,
+        ELF_SECTION_COMMON =                    0xfff2
 };
 
 enum elf_section_type{
@@ -130,7 +125,7 @@ enum elf_section_flag{
  */
 
 /*
- * Use of elf_section_header.misc_info:
+ * Use of elf_section_header.info:
  * - ELF_SECTION_REL    - Section index of section to which the relocations
  * - ELF_SECTION_RELA   ^ apply.
  * - ELF_SECTION_SYMTAB - Index of first non-local symbol (i.e., number of
@@ -151,7 +146,7 @@ enum elf_section_flag{
  * - size        - Byte size of the section (except for SHT_NOBITS sections),
  *                 this is the amount of space occupied in the file.
  * - link        - Section index of an associated section, use varies on type.
- * - misc_info   - Extra info.
+ * - info        - Extra info.
  * - addralign   - Required alignment of the section.
  * - entsize     - Byte size of each entry for sections that contains fixed-size
  *                 entries, else contains 0.
@@ -165,9 +160,49 @@ struct __attribute((packed)) elf64_section_header{
         uint64_t                                file_offset;
         uint64_t                                size;
         uint32_t                                link;
-        uint32_t                                misc_info;
+        uint32_t                                info;
         uint64_t                                addralign;
         uint64_t                                entsize;
+};
+
+/* TODO
+ * - name          - Bytes offset of the symbol name relative to the start of
+ *                   the symbol string table; 0 = No name.
+ * - info          - Symbol type and binding attributes (its scope).
+ * - other         - Reserved. 0 value.
+ * - sct_hdr_index - Section index of the section in which the symbol is
+ *                   "defined".
+ *                 - Contains ELF_SECTION_UNDEFINED for undefined symbol.
+ *                 - Contains ELF_SECTION_ABSOLUTE for absolute symbols.
+ *                 - Contains ELF_SECTION_COMMON for common symbols.
+ * - value         - May be an absolute value or a relocatable address.
+ *                 - In relocatable files, this field contains the alignment
+ *                   constraint for common symbols, and a section-relative
+ *                   offset for defined relocatable symbols.
+ *                 - In executable and shared object files, this field contains
+ *                   a virtual address for defined relocatable symbols.
+ * - size          - The size associated with the symbol. If none or unknown,
+ *                   this is 0 value.
+ */
+
+struct __attribute((packed)) elf64_symbol_table{
+        uint32_t                                name;
+        uint8_t                                 info;
+        uint8_t                                 other;
+        uint16_t                                sct_hdr_index;
+        uint64_t                                value;
+        uint64_t                                size;
+};
+
+struct __attribute((packed)) elf64_program_header{
+        uint32_t                                seg_type;
+        uint32_t                                flags;
+        uint64_t                                data_offset;
+        uint64_t                                vaddr;
+        uint64_t                                paddr;
+        uint64_t                                seg_filesize;
+        uint64_t                                seg_memsize;
+        uint64_t                                alignment;
 };
 
 #endif /* ELF_H */
