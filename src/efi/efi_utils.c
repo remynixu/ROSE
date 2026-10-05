@@ -1,14 +1,17 @@
 #include <efi/efi_utils.h>
-#include <rose/string.h>
+#include <rose/basic_memory.h>
 
-EFI_STATUS efi_output(
+extern EFI_STATUS global_efi_status;
+
+bool efi_output(
         EFI_SYSTEM_TABLE                       *ctx,
         const uint16_t                         *utf16
 ){
-        return ctx->ConOut->OutputString(ctx->ConOut, utf16);
+        global_efi_status = ctx->ConOut->OutputString(ctx->ConOut, utf16);
+        return EFI_ISSUCCESS(global_efi_status);
 }
 
-EFI_STATUS efi_printc(
+bool efi_printc(
         EFI_SYSTEM_TABLE                       *ctx,
         const uint16_t                          c
 ){
@@ -18,16 +21,40 @@ EFI_STATUS efi_printc(
         return efi_output(ctx, utf16);
 }
 
-EFI_STATUS efi_prints(
+bool efi_prints(
         EFI_SYSTEM_TABLE                       *ctx,
         const char                             *str
 ){
-        EFI_STATUS status = EFI_SUCCESS;
         uint64_t i;
         for(i = 0; i < strlen(str); i++){
-                status = efi_printc(ctx, str[i]);
-                if(EFI_ISERROR(status))
+                if(efi_printc(ctx, str[i]))
+                        continue;
+                if(EFI_ISERROR(global_efi_status))
                         break;
         }
-        return status;
+        return EFI_ISSUCCESS(global_efi_status);
+}
+
+bool efi_input(
+        EFI_SYSTEM_TABLE                       *ctx,
+        EFI_INPUT_KEY                           key             [static 1]
+){
+        global_efi_status = ctx->ConIn->ReadKeyStroke(ctx->ConIn, key);
+        return EFI_ISSUCCESS(global_efi_status);
+}
+
+bool efi_keystroke(
+        EFI_SYSTEM_TABLE                       *ctx,
+        uint16_t                                scancode        [static 1],
+        uint16_t                                unicode         [static 1]
+){
+        EFI_INPUT_KEY key;
+        if(!efi_input(ctx, &key)){
+                if(!EFI_ISSUCCESS(global_efi_status))
+                        goto exit;
+        }
+        *scancode = key.ScanCode;
+        *unicode = key.UnicodeChar;
+exit:
+        return EFI_ISSUCCESS(global_efi_status);
 }

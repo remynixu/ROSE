@@ -1,14 +1,14 @@
 #ifndef ELF_H
 
-/*
+#include <rose/tricks.h>
+
+/**
  * ELF parser :<
  */
-#define ELF_H
-
-#include <stdint.h>
+#define ELF_H                                   ROSE_H_MAGIC__(1, 0, 0)
 
 /* 0x7f, 0x45, 0x4c, 0x46 */
-#define ELF_MAGIC                               4
+#define ELF_MAGIC_COUNT                         4
 
 enum elf_bitness{
         ELF_BITNESS_32 =                        1, /* 32-bit                  */
@@ -26,7 +26,7 @@ enum elf_osabi{
         ELF_OSABI_STANDALONE =                  255 /* Standalone/Embedded    */
 };
 
-/*
+/**
  * - magic[4]      - ELF_MAGIC
  * - bitness       - 0 = Invalid, 1 = 32-bit, 2 = 64-bit
  * - endianness    - 1 = little-endian, 2 = big-endian
@@ -54,7 +54,7 @@ enum elf_type{
         ELF_TYPE_CORE =                         4  /* Core file               */
 };
 
-/*
+/**
  * - type           - Object's file type.
  * - machine        - Target architecture.
  * - version        - Format's version, "...defined with [...] 1" (Cary Coutant)
@@ -87,6 +87,8 @@ struct __attribute((packed)) elf64_header{
         uint16_t                                sct_str_index;
 };
 
+#if 0
+
 enum elf_section_indices{
         ELF_SECTION_UNDEFINED =                 0,
         ELF_SECTION_ABSOLUTE =                  0xfff1,
@@ -114,7 +116,7 @@ enum elf_section_flag{
         ELF_SECTION_EXECUTABLE =                0x4  /* Contains instructions */
 };
 
-/*
+/**
  * Use of elf_section_header.link:
  * - ELF_SECTION_DYNAMIC - String table used by entries in this section.
  * - ELF_SECTION_HASH    - Symbol table to which the hash table applies.
@@ -124,7 +126,7 @@ enum elf_section_flag{
  * - ELF_SECTION_DYNSYM  ^
  */
 
-/*
+/**
  * Use of elf_section_header.info:
  * - ELF_SECTION_REL    - Section index of section to which the relocations
  * - ELF_SECTION_RELA   ^ apply.
@@ -133,7 +135,7 @@ enum elf_section_flag{
  * - [Others]           - 0
  */
 
-/*
+/**
  * - name_offset - Bytes offset to the section name, relative to the start of
  *                 the section name string table.
  * - type        - Section type.
@@ -165,7 +167,7 @@ struct __attribute((packed)) elf64_section_header{
         uint64_t                                entsize;
 };
 
-/* TODO
+/**
  * - name          - Bytes offset of the symbol name relative to the start of
  *                   the symbol string table; 0 = No name.
  * - info          - Symbol type and binding attributes (its scope).
@@ -194,6 +196,62 @@ struct __attribute((packed)) elf64_symbol_table{
         uint64_t                                size;
 };
 
+#endif /* UNUSED */
+
+/**
+ * - offset - The location at which the relocation should be applied.
+ * - info   - Contains both the symbol table index and a relocation type.
+ * - addend - Used to compute the value to be stored in the relocated field.
+ */
+
+struct __attribute((packed)) efl64_rel{
+        uint64_t                                offset; /* Reference address  */
+        uint64_t                                info;   /* Symbol index; Type */
+};
+
+struct __attribute((packed)) elf64_rela{
+        uint64_t                                offset; /* Reference address  */
+        uint64_t                                info;   /* Symbol index; Type */
+        int64_t                                 addend; /* Part of expression */
+};
+
+/**
+ * Find `elf64_rel/a`'s info's symbol table index.
+ */
+#define ELF64_REL_STI(i)                ((i) >> 32)
+
+/**
+ * Find `elf64_rel/a`'s info's relocation type.
+ */
+#define ELF64_REL_RTYPE(i)              ((i) & 0xffffffffL)
+
+enum elf_segment_type{
+        ELF_SEGMENT_NULL =                      0, /* Unused entry            */
+        ELF_SEGMENT_LOAD =                      1, /* Loadable segment        */
+        ELF_SEGMENT_DYNAMIC =                   2, /* Dynamic linking tables  */
+        ELF_SEGMENT_INTERP =                    3, /* Interpreter path name   */
+        ELF_SEGMENT_NOTE =                      4, /* Note sections           */
+        ELF_SEGMENT_SHLIB =                     5, /* Reserved                */
+        ELF_SEGMENT_PHDR =                      6  /* Program header table    */
+};
+
+enum elf_segment_attribute{
+        ELF_SEGMENT_EXECUTE =                   0x1,
+        ELF_SEGMENT_WRITE =                     0x2,
+        ELF_SEGMENT_READ =                      0x4
+};
+
+/**
+ * - seg_type     - The type of segment.
+ * - flags        - Segment attributes.
+ * - offset       - Bytes offset of the segment from the beginning of the file.
+ * - vaddr        - Virtual address of the segment in memory.
+ * - paddr        - Reserved for systems with physical addressing.
+ * - seg_filesize - The byte size of the file image of the segment.
+ * - seg_memsize  - The byte size of the memory image of the segment.
+ * - alignment    - The alignment constraint for the segment; A power of 2.
+ */
+
 struct __attribute((packed)) elf64_program_header{
         uint32_t                                seg_type;
         uint32_t                                flags;
@@ -203,6 +261,55 @@ struct __attribute((packed)) elf64_program_header{
         uint64_t                                seg_filesize;
         uint64_t                                seg_memsize;
         uint64_t                                alignment;
+};
+
+enum elf_dynamic_type{
+        ELF_DYNAMIC_NULL =                      0,
+        ELF_DYNAMIC_NEEDED,
+        ELF_DYNAMIC_PLTRELSZ,
+        ELF_DYNAMIC_HASH,
+        ELF_DYNAMIC_STRTAB,
+        ELF_DYNAMIC_SYMTAB,
+        ELF_DYNAMIC_RELA,
+        ELF_DYNAMIC_RELASZ,
+        ELF_DYNAMIC_RELAENT,
+        ELF_DYNAMIC_STRSZ,
+        ELF_DYNAMIC_SYMENT,
+        ELF_DYNAMIC_INIT,
+        ELF_DYNAMIC_FINI,
+        ELF_DYNAMIC_SONAME,
+        ELF_DYNAMIC_RPATH,
+        ELF_DYNAMIC_SYMBOLIC,
+        ELF_DYNAMIC_REL,
+        ELF_DYNAMIC_RELSZ,
+        ELF_DYNAMIC_RELENT,
+        ELF_DYNAMIC_PLTREL,
+        ELF_DYNAMIC_DEBUG,
+        ELF_DYNAMIC_TEXTREL,
+        ELF_DYNAMIC_JMPREL,
+        ELF_DYNAMIC_BIND_NOW,
+        ELF_DYNAMIC_INIT_ARRAY,
+        ELF_DYNAMIC_FINI_ARRAY,
+        ELF_DYNAMIC_INIT_ARRAYSZ,
+        ELF_DYNAMIC_FINI_ARRAYSZ,
+        ELF_DYNAMIC_LOOS
+};
+
+/**
+ * - type  - The type of dynamic table entry.
+ * - value - Represents an integer value.
+ * - ptr   - Represents program virtual addresses. These addresses are link-time
+ *           virtual addresses, and must be relocated to match the object file's
+ *           actual load address. This relocation must be done implicitly; there
+ *           are no dynmaic relocations for these entries.
+ */
+
+struct __attribute((packed)) elf64_dynamic_entry{
+        int64_t                                 type;
+        union{
+                uint64_t                        value;
+                uint64_t                        ptr;
+        }data;
 };
 
 #endif /* ELF_H */

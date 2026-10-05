@@ -1,25 +1,26 @@
 #ifndef EFI_H
 
-/* 
- * From this 9/21/2026 onwards, this header will be largely undocumented. All
- * the documents will now be found in efi_utils.h, a wrapper for efi.h's stuff.
+/*
+ * NOTE: Incomplete documentations!
  */
 
-/*
+/**
+ * Not supposed to work in hosted environments.
+ */
+#if __STDC_HOSTED__ == 0
+
+#include <rose/tricks.h>
+
+/**
  * This header is primarily for loading the rOSe kernel using the UEFI
  * specifications for its bootloader.
  *
  * All of the header's code is derived from this link:
  * - https://uefi.org/specs/UEFI/2.10
  */
-#define EFI_H
+#define EFI_H                                   ROSE_H_MAGIC__(1, 0, 0)
 
-/*
- * You know what? Let's take Clang's generous offer because it's just better :>
- */
-#include <stdint.h>
-
-/*
+/**
  * To make sure the compiler doesn't do any unexpected magic... please add this
  * before the name of every EFI function :<
  */
@@ -34,21 +35,21 @@
 #define OUT
 #define OPTIONAL
 
-/* ========================================================================== *
+/** ========================================================================= *
  * Special UEFI Data Types:
  */
 
-/* UEFI intentionally made EFI_HANDLE a black box so... */
+/** UEFI intentionally made EFI_HANDLE a black box so... */
 typedef void*                                   EFI_HANDLE;
 
-/* UEFI also made events a black box :< */
+/** UEFI also made events a black box :< */
 typedef void*                                   EFI_EVENT;
 
-/* -------------------------------------------------------------------------- *
+/** ------------------------------------------------------------------------- *
  * UEFI Error codes:
  */
 
-/*
+/**
  * According to UEFI specifications, the high bit is 1 if something went wrong
  * and 0 if it's a success or just a warning. It goes something like this:
  *
@@ -64,39 +65,41 @@ typedef uintptr_t                               EFI_STATUS;
 
 #define EFI_SUCCESS                             ((EFI_STATUS)0)
 
-#define ERRORCODE_BITMASK__                     ((EFI_STATUS)1 << 63)
-#define ERRORCODE__(ec__)                                                     \
+#define EFI_ERRORCODE_BITMASK__                 ((EFI_STATUS)1 << 63)
+#define EFI_ERRORCODE__(ec__)                                                 \
         ((EFI_STATUS)(ec__) | ERRORCODE_BITMASK__)
 
-/*
+/**
  * ERROR/WARNING HELPERS:
  */
 
+#define EFI_ISSUCCESS(ec__)                                                   \
+        ((EFI_STATUS)(ec__) == EFI_SUCCESS)
 #define EFI_ISERROR(ec__)                                                     \
-        ((EFI_STATUS)(ec__) & ERRORCODE_BITMASK__)
+        ((EFI_STATUS)(ec__) & EFI_ERRORCODE_BITMASK__)
 #define EFI_ISWARNING(ec__)                                                   \
         ((EFI_STATUS)(ec__) != EFI_SUCCESS) && !EFI_ISERROR((EFI_STATUS)(ec__))
 
-/*
+/**
  * ERRORS:
  */
 
-#define EFI_LOAD_ERROR                          ERRORCODE__(1)
-#define EFI_INVALID_PARAMETER                   ERRORCODE__(2)
-#define EFI_UNSUPPORTED                         ERRORCODE__(3)
-#define EFI_BAD_BUFFER_SIZE                     ERRORCODE__(4)
-#define EFI_BUFFER_TOO_SMALL                    ERRORCODE__(5)
-#define EFI_NOT_READY                           ERRORCODE__(6)
-#define EFI_DEVICE_ERROR                        ERRORCODE__(7)
-#define EFI_WRITE_PROTECTED                     ERRORCODE__(8)
-#define EFI_OUT_OF_RESOURCES                    ERRORCODE__(9)
-#define EFI_VOLUME_CORRUPTED                    ERRORCODE__(10)
-#define EFI_VOLUME_FULL                         ERRORCODE__(11)
-#define EFI_NO_MEDIA                            ERRORCODE__(12)
-#define EFI_MEDIA_CHANGED                       ERRORCODE__(13)
-#define EFI_NOT_FOUND                           ERRORCODE__(14)
+#define EFI_LOAD_ERROR                          EFI_ERRORCODE__(1)
+#define EFI_INVALID_PARAMETER                   EFI_ERRORCODE__(2)
+#define EFI_UNSUPPORTED                         EFI_ERRORCODE__(3)
+#define EFI_BAD_BUFFER_SIZE                     EFI_ERRORCODE__(4)
+#define EFI_BUFFER_TOO_SMALL                    EFI_ERRORCODE__(5)
+#define EFI_NOT_READY                           EFI_ERRORCODE__(6)
+#define EFI_DEVICE_ERROR                        EFI_ERRORCODE__(7)
+#define EFI_WRITE_PROTECTED                     EFI_ERRORCODE__(8)
+#define EFI_OUT_OF_RESOURCES                    EFI_ERRORCODE__(9)
+#define EFI_VOLUME_CORRUPTED                    EFI_ERRORCODE__(10)
+#define EFI_VOLUME_FULL                         EFI_ERRORCODE__(11)
+#define EFI_NO_MEDIA                            EFI_ERRORCODE__(12)
+#define EFI_MEDIA_CHANGED                       EFI_ERRORCODE__(13)
+#define EFI_NOT_FOUND                           EFI_ERRORCODE__(14)
 
-/*
+/**
  * WARNINGS:
  */
 
@@ -108,7 +111,7 @@ typedef uintptr_t                               EFI_STATUS;
 #define EFI_WARN_FILE_SYSTEM                    (6)
 #define EFI_WARN_RESET_REQUIRED                 (7)
 
-/* ========================================================================== *
+/** ========================================================================= *
  * UEFI Functions:
  */
 
@@ -117,7 +120,7 @@ typedef uintptr_t                               EFI_STATUS;
  * copy-pasted code below...
  */
 
-/* -------------------------------------------------------------------------- *
+/** ------------------------------------------------------------------------- *
  * EFI_SYSTEM_TABLE contents:
  */
 
@@ -149,7 +152,7 @@ typedef struct{
         uint32_t                                Reserved;
 }EFI_TABLE_HEADER;
 
-/* -------------------------------------------------------------------------- *
+/** ------------------------------------------------------------------------- *
  * EFI_SIMPLE_TEXT_INPUT_PROTOCOL contents:
  */
 
@@ -159,28 +162,57 @@ typedef struct{
 
 typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL  EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
 
+/**
+ * Resets the input device hardware.
+ *
+ * Returns:
+ * - EFI_SUCCESS      - Device was resetted.
+ * - EFI_DEVICE_ERROR - Device not functioning; Reset failed.
+ */
 typedef EFI_STATUS (EFI_API *EFI_INPUT_RESET)(
      IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *This,
-     IN uint8_t                                ExtendedVerification
+     IN uint8_t                                 ExtendedVerification
 );
 
+/**
+ * Keystroke info for the key that was pressed.
+ */
 typedef struct{
-        uint16_t                            ScanCode;
-        uint16_t                               UnicodeChar;
+        uint16_t                                ScanCode;
+        uint16_t                                UnicodeChar;
 }EFI_INPUT_KEY;
 
+/**
+ * Reads the next keystroke from the input device.
+ *
+ * Returns:
+ * - EFI_SUCCESS      - Keystroke info was returned.
+ * - EFI_NOT_READY    - No keystroke data available.
+ * - EFI_DEVICE_ERROR - Hardware error.
+ * - EFI_UNSUPPORTED  - Device doesn't support the ability to read keystroke
+ *                      data.
+ */
 typedef EFI_STATUS (EFI_API *EFI_INPUT_READ_KEY)(
      IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *This,
     OUT EFI_INPUT_KEY                          *Key
 );
 
+/**
+ * Reset         - Reset the ConsolIn device.
+ * ReadKeyStroke - Returns the next input character.
+ * WaitForKey    - ...to wait for a key to be available.
+ */
+
+/**
+ * Obtain input from the ConsoleIn device.
+ */
 typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL{
         EFI_INPUT_RESET                         Reset;
         EFI_INPUT_READ_KEY                      ReadKeyStroke;
         EFI_EVENT                               WaitForKey;
 }EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
 
-/* -------------------------------------------------------------------------- *
+/** ------------------------------------------------------------------------- *
  * EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL contents:
  */
 
@@ -196,7 +228,7 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_RESET)(
      IN uint8_t                                ExtendedVerification
 );
 
-/*
+/**
  * Returns:
  * - EFI_SUCCESS
  * - EFI_DEVICE_ERROR
@@ -208,7 +240,7 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
      IN uint16_t                               *String
 );
 
-/*
+/**
  * UNICODE DRAWING CHARACTERS
  */
 
@@ -260,14 +292,14 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
 #define BOXDRAW_VERTICAL_DOUBLE_HORIZONTAL      0x256b
 #define BOXDRAW_DOUBLE_VERTICAL_HORIZONTAL      0x256c
 
-/*
+/**
  * EFI Required Block Elements Code Chart
  */
 
 #define BLOCKELEMENT_FULL_BLOCK                 0x2588
 #define BLOCKELEMENT_LIGHT_SHADE                0x2591
 
-/*
+/**
  * EFI Required Geometric Shapes Code Chart
  */
 
@@ -276,7 +308,7 @@ typedef EFI_STATUS (EFI_API *EFI_TEXT_STRING)(
 #define GEOMETRICSHAPE_DOWN_TRIANGLE            0x25bc
 #define GEOMETRICSHAPE_LEFT_TRIANGLE            0x25c4
 
-/*
+/**
  * EFI Required Arrow shapes
  */
 
@@ -344,7 +376,7 @@ typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL{
         SIMPLE_TEXT_OUTPUT_MODE                *Mode;
 }EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
-/* -------------------------------------------------------------------------- *
+/** ------------------------------------------------------------------------- *
  * EFI_RUNTIME_SERVICES contents:
  */
 
@@ -391,12 +423,14 @@ typedef struct{
         void                                   *padding__1[13];
 }EFI_RUNTIME_SERVICES;
 
-/* -------------------------------------------------------------------------- *
+/** ------------------------------------------------------------------------- *
  * EFI_BOOT_SERVICES contents:
  */
 
-/* -------------------------------------------------------------------------- *
- * MEMORY SERVICES:
+/* crickets chirping... */
+
+/** ------------------------------------------------------------------------- *
+ * MEMORY SERVICES :
  */
 
 #define EFI_BOOT_SERVICES_SIGNATURE             0x56524553544f4f42
@@ -506,7 +540,7 @@ typedef struct{
         void                                   *padding__2[38];
 }EFI_BOOT_SERVICES;
 
-/* -------------------------------------------------------------------------- *
+/** ------------------------------------------------------------------------- *
  * EFI_CONFIGURATION_TABLE contents:
  */
 
@@ -524,29 +558,43 @@ typedef struct{
 
 typedef struct{
         EFI_TABLE_HEADER                        Hdr;
+
+        /* Firmware */
         uint16_t                               *FirmwareVendor;
         uint32_t                                FirmwareRevision;
+
+        /* Input */
         EFI_HANDLE                              ConsoleInHandle;
         EFI_SIMPLE_TEXT_INPUT_PROTOCOL         *ConIn;
+
+        /* Output */
         EFI_HANDLE                              ConsoleOutHandle;
         EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *ConOut;
+
+        /* Error */
         EFI_HANDLE                              StandardErrorHandle;
         EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *StdErr;
+
+        /* Services */
         EFI_RUNTIME_SERVICES                   *RuntimeServices;
         EFI_BOOT_SERVICES                      *BootServices;
+
+        /* Info */
         uintptr_t                               NumberOfTableEntries;
         EFI_CONFIGURATION_TABLE                *ConfigurationTable;
 }EFI_SYSTEM_TABLE;
 
 /*
- * The entry porose_sbit of an EFI binary.
+ * The entry point of an EFI binary.
  *
- * EFI_HANDLE is an opaque porose_sbiter we're not supposd to tamper with.
+ * EFI_HANDLE is an opaque pointer we're not supposd to tamper with.
  * EFI_SYSTEM_TABLE is where the useful functions and data are!
  */
 typedef EFI_STATUS (EFI_API *EFI_IMAGE_ENTRY_POINT)(
      IN EFI_HANDLE                              ImageHandle,
      IN EFI_SYSTEM_TABLE                       *SystemTable
 );
+
+#endif /* __STDC_HOSTED__ */
 
 #endif /* EFI_H */
