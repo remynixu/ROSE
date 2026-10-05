@@ -5,7 +5,7 @@
  *
  * Also more!
  */
-#define TRICKS_H                                0x524f5345
+#define TRICKS_H                                0x524f5345 /* "ROSE" */
 
 /**
  * Also acts as a little sanity-check for ROSE files :D
