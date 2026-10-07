@@ -5,7 +5,7 @@
 /*
  * Bytes and more helpers for ROSE!
  */
-#define BYTE_H                                  ROSE_H_MAGIC__(1, 0, 0)
+#define BYTE_H                                  ROSE_H_VERSION(1, 0, 0)
 
 /**
  * Each odd byte always use bit 0 to signify '1', hence making bytes

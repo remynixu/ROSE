@@ -1,4 +1,4 @@
-#ifndef BASIC_MEMORY_H
+#ifndef MEMORY_HELPER_H
 
 /**
  * Notes:
@@ -17,7 +17,7 @@
  *
  * Without advanced features like malloc or free.
  */
-#define BASIC_MEMORY_H                          ROSE_H_MAGIC__(1, 0, 0)
+#define MEMORY_HELPER_H                         ROSE_H_VERSION(1, 0, 0)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *
  *                             STANDARD FUNCTIONS                            *
@@ -57,4 +57,4 @@ void *memcpy(void *__restrict dest, void *__restrict source, size_t count)      
  */
 void *memmove(void *dest, const void *source, size_t count);
 
-#endif /* BASIC_MEMORY_H */
+#endif /* MEMORY_HELPER_H */

@@ -1,5 +1,7 @@
 #include <efi/efi_utils.h>
-#include <rose/basic_memory.h>
+
+#include <rose/memory_helper.h>
+#include <rose/string_helper.h>
 
 extern EFI_STATUS global_efi_status;
 
@@ -7,7 +9,7 @@ bool efi_output(
         EFI_SYSTEM_TABLE                       *ctx,
         const uint16_t                         *utf16
 ){
-        global_efi_status = ctx->ConOut->OutputString(ctx->ConOut, utf16);
+        global_efi_status = ctx->ConOut->OutputString(ctx->ConOut, (uint16_t *)utf16);
         return EFI_ISSUCCESS(global_efi_status);
 }
 
@@ -26,7 +28,7 @@ bool efi_prints(
         const char                             *str
 ){
         uint64_t i;
-        for(i = 0; i < strlen(str); i++){
+        for(i = 0; i < strlen((char *)str); i++){
                 if(efi_printc(ctx, str[i]))
                         continue;
                 if(EFI_ISERROR(global_efi_status))

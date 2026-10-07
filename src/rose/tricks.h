@@ -8,7 +8,7 @@
 #define TRICKS_H                                0x524f5345 /* "ROSE" */
 
 /**
- * Also acts as a little sanity-check for ROSE files :D
+ * Also makes tricks.h act as a little sanity-check for ROSE files :D
  */
 #if (__SIZEOF_POINTER__ != 8) || (_WIN64 != 1) || (__x86_64__ != 1)
 #error "ROSE strictly requires a 64-bit architecture!"
@@ -26,7 +26,7 @@
 /**
  * This is for "inline" versioning... and signature of course.
  */
-#define ROSE_H_MAGIC__(mjr, mnr, b)                                           \
+#define ROSE_H_VERSION(mjr, mnr, b)                                           \
         ((uint64_t)TRICKS_H << 32) | ((mjr) << 16) | ((mnr) << 8) | (b)
 
 /**

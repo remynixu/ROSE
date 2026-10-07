@@ -10,7 +10,7 @@
 /**
  * A *thin* wrapper around efi.h for ROSE :<
  */
-#define EFI_UTILS_H                             ROSE_H_MAGIC__(1, 0, 0)
+#define EFI_UTILS_H                             ROSE_H_VERSION(1, 0, 0)
 
 #include <efi/efi.h>
 

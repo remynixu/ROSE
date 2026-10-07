@@ -18,7 +18,7 @@
  * All of the header's code is derived from this link:
  * - https://uefi.org/specs/UEFI/2.10
  */
-#define EFI_H                                   ROSE_H_MAGIC__(1, 0, 0)
+#define EFI_H                                   ROSE_H_VERSION(1, 0, 0)
 
 /**
  * To make sure the compiler doesn't do any unexpected magic... please add this

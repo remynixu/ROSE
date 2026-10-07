@@ -5,7 +5,7 @@
 /**
  * ELF parser :<
  */
-#define ELF_H                                   ROSE_H_MAGIC__(1, 0, 0)
+#define ELF_H                                   ROSE_H_VERSION(1, 0, 0)
 
 /* 0x7f, 0x45, 0x4c, 0x46 */
 #define ELF_MAGIC_COUNT                         4

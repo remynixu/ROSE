@@ -1,4 +1,4 @@
-#include <rose/basic_memory.h>
+#include <rose/memory_helper.h>
 
 #include <rose/byte.h>
 #include <rose/tricks.h>
